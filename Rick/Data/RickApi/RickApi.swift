@@ -38,7 +38,7 @@ final class RickApi: RickApiProtocol {
 
       let characterResponse = try decoder.decode(CharacterResponse.self, from: data)
 
-      print("fetched characters \(characterResponse.results.count).")
+      print("fetched characters, count: \(characterResponse.results.count).")
       return characterResponse
 
     } catch {

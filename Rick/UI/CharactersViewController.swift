@@ -121,9 +121,13 @@ class CharactersViewController: UIViewController {
 
     case .loading:
       stateView.imageView.image = Constants.loadingImage
+      stateView.titleLabel.text = "Fetching characters . . ."
+      stateView.subtitleLabel.text = ""
 
     case .error:
       stateView.imageView.image = Constants.errorImage
+      stateView.titleLabel.text = "Something went wrong!"
+      stateView.subtitleLabel.text = "Please check your internet connection."
 
     case .finished(let characters):
       self.characters = characters
@@ -156,6 +160,10 @@ extension CharactersViewController: UITableViewDataSource {
   }
 
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    if indexPath.row + 1 == characters.count {
+      print("Scrolled to bottom")
+      viewModel.onAction(.scrolledToBottom)
+    }
     var cell = tableView.dequeueReusableCell(withIdentifier: Constants.characterCellIdentifier)
     if cell == nil {
       cell = UITableViewCell(style: .subtitle,
