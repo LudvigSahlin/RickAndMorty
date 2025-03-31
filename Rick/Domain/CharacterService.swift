@@ -8,9 +8,16 @@
 import UIKit
 
 protocol CharacterServiceProtocol: Sendable {
-  func fetchCharacters() async throws(CharacterServiceError) -> [Character]
+  func fetchCharacters(page: Int) async throws(CharacterServiceError) -> (
+    hasMoreData: Bool,
+    data: [Character]
+  )
+
   func fetchLocalImage(character: Character) async -> UIImage?
   func fetchImage(character: Character) async throws(CharacterServiceError) -> UIImage?
+
+//  func allCharactersFetched() async -> Bool
+//  func characters() async -> [Character]
 }
 
 enum CharacterServiceError: Error {
@@ -20,14 +27,21 @@ enum CharacterServiceError: Error {
 final class CharacterService: CharacterServiceProtocol {
 
   private let repository: CharacterRepositoryProtocol
+//  private(set) var allCharactersFetched = false
+//  private(set) var characters: [Character] = []
 
   init() {
     self.repository = CharacterRepository()
   }
 
-  func fetchCharacters() async throws(CharacterServiceError) -> [Character] {
+  func fetchCharacters(page: Int) async throws(CharacterServiceError) -> (
+    hasMoreData: Bool,
+    data: [Character]
+  ) {
     do {
-      return try await repository.fetchCharacters()
+      let response = try await repository.fetchCharacters(page: page)
+      let hasMoreData = response.info.next != nil
+      return (hasMoreData, response.results)
     } catch {
       throw .fetchError(error)
     }

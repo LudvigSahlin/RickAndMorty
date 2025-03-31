@@ -15,9 +15,9 @@ final class CharacterRemote: Sendable {
     self.rickClient = RickApi()
   }
 
-  func fetchCharacters() async throws(CharacterRepositoryError) -> [Character] {
+  func fetchCharacters(page: Int) async throws(CharacterRepositoryError) -> CharacterResponse {
     do {
-      return try await rickClient.fetchCharacters(page: 1).results
+      return try await rickClient.fetchCharacters(page: page)
     } catch {
       throw .fetchError(error)
     }

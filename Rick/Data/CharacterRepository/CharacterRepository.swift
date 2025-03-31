@@ -8,7 +8,7 @@
 import Foundation
 
 protocol CharacterRepositoryProtocol: Sendable {
-  func fetchCharacters() async throws(CharacterRepositoryError) -> [Character]
+  func fetchCharacters(page: Int) async throws(CharacterRepositoryError) -> CharacterResponse
   func fetchLocalImage(character: Character) async -> Data?
   func fetchImage(character: Character) async throws(CharacterRepositoryError) -> Data?
 }
@@ -28,8 +28,8 @@ final class CharacterRepository: CharacterRepositoryProtocol {
     self.localStorage = CharacterLocalStorage()
   }
 
-  func fetchCharacters() async throws(CharacterRepositoryError) -> [Character] {
-    try await remote.fetchCharacters()
+  func fetchCharacters(page: Int) async throws(CharacterRepositoryError) -> CharacterResponse {
+    try await remote.fetchCharacters(page: page)
   }
   
   func fetchLocalImage(character: Character) async -> Data? {

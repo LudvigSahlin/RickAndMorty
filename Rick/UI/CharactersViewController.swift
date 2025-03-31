@@ -6,56 +6,153 @@
 //
 
 import UIKit
-import SwiftUI
+import Combine
 
+extension CharactersViewController {
+  /// Main state of ViewController.
+  enum UiState {
+    case idle
+    /// Initial data is being fetched.
+    case loading(preview: Character)
+    /// Initial data failed to fetch.
+    case error(error: Error)
+    /// Initial data is fetched.
+    case finished(characters: [Character])
+
+    fileprivate var showStateView: Bool {
+      switch self {
+      case .idle, .finished:
+        return false
+      case .loading, .error:
+        return true
+      }
+    }
+  }
+  /// Typically used to show activity indicator in list.
+  enum ListState {
+    /// There might be more data to fetch.
+    case idle
+    /// More data is currently being fetched.
+    case loading
+    /// Last attempt to fetch more data resulted in an error.
+    case error(error: Error)
+    /// There is no more data available.
+    case finished(characters: [Character])
+  }
+  /// User action.
+  enum Action {
+    /// Typically used if the first fetch fails.
+    case refreshData
+    case scrolledToBottom
+    case tappedOnCharacter(id: String)
+  }
+}
 class CharactersViewController: UIViewController {
 
   private enum Constants {
     static let characterCellIdentifier = "characterCellIdentifier"
+    static let errorImage = UIImage(systemName: "exclamationmark.triangle")!
+    static let loadingImage = UIImage(systemName: "arrowshape.down.circle")!
   }
+
+  private lazy var stateView = StateView()
 
   private lazy var charactersTableView: UITableView = {
     let tableView = UITableView()
     tableView.dataSource = self
-//    tableView
     tableView.register(UITableViewCell.self,
                        forCellReuseIdentifier: Constants.characterCellIdentifier)
     return tableView
   }()
 
   private let viewModel = CharactersViewModel()
+  private var cancellables = Set<AnyCancellable>()
+  private var characters: [Character] = []
 
   override func viewDidLoad() {
     super.viewDidLoad()
-
     addSubviews()
     setConstraints()
-
-
+    subscribeToPublishers()
   }
 
   private func addSubviews() {
     view.addSubview(charactersTableView)
+    view.addSubview(stateView)
   }
 
   private func setConstraints() {
     charactersTableView.translatesAutoresizingMaskIntoConstraints = false
+    stateView.translatesAutoresizingMaskIntoConstraints = false
     NSLayoutConstraint.activate([
       charactersTableView.topAnchor.constraint(equalTo: view.topAnchor),
       charactersTableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
       charactersTableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-      charactersTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
+      charactersTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+
+      stateView.topAnchor.constraint(equalTo: view.topAnchor),
+      stateView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+      stateView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+      stateView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
     ])
   }
 
-  
+  private func subscribeToPublishers() {
+    viewModel.uiStatePublisher
+      .sink { [weak self] uiState in
+        self?.handleUiState(uiState)
+      }
+      .store(in: &cancellables)
 
+    viewModel.listStatePublisher
+      .sink { [weak self] listState in
+        self?.handleListState(listState)
+      }
+      .store(in: &cancellables)
+  }
 
+  private func handleUiState(_ uiState: UiState) {
+    stateView.isHidden = !uiState.showStateView
+    charactersTableView.isHidden = uiState.showStateView
+
+    switch uiState {
+    case .idle:
+      break
+
+    case .loading:
+      stateView.imageView.image = Constants.loadingImage
+
+    case .error:
+      stateView.imageView.image = Constants.errorImage
+
+    case .finished(let characters):
+      self.characters = characters
+      charactersTableView.reloadData()
+    }
+  }
+
+  private func handleListState(_ listState: ListState) {
+    switch listState {
+    case .idle:
+      break
+    case .loading:
+      // show loading spinner?
+      break
+    case .error:
+      // remove loading spinner?
+      break
+    case .finished(let characters):
+      self.characters = characters
+      charactersTableView.reloadData() // TODO: append the new data only
+      // remove loading spinner?
+      break
+    }
+  }
 }
 
 extension CharactersViewController: UITableViewDataSource {
   func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-    1
+    characters.count
   }
 
   func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -66,7 +163,7 @@ extension CharactersViewController: UITableViewDataSource {
     }
 
 
-    let character = viewModel.rick
+    let character = characters[indexPath.row]
 
 
 
@@ -82,7 +179,7 @@ extension CharactersViewController: UITableViewDataSource {
 
 
     content.text = character.name
-    content.secondaryText = character.status
+    content.secondaryText = "Status: \(character.status)"
     // Customize appearance.
     content.imageProperties.tintColor = .purple
 
