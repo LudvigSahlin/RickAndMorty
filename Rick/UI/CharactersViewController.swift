@@ -60,6 +60,7 @@ class CharactersViewController: UIViewController {
   private lazy var charactersTableView: UITableView = {
     let tableView = UITableView()
     tableView.dataSource = self
+    tableView.delegate = self
     tableView.register(UITableViewCell.self,
                        forCellReuseIdentifier: Constants.characterCellIdentifier)
     return tableView
@@ -151,6 +152,17 @@ class CharactersViewController: UIViewController {
       // remove loading spinner?
       break
     }
+  }
+}
+
+extension CharactersViewController: UITableViewDelegate {
+  func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    let character = characters[indexPath.row]
+    print("Selected character: \(character.name)")
+    let id = "\(character.id)"
+    viewModel.onAction(.tappedOnCharacter(id: id))
+    tableView.deselectRow(at: indexPath, animated: true)
+    navigationController?.pushViewController(CharacterDetailViewController(), animated: true)
   }
 }
 

@@ -96,7 +96,8 @@ class CharactersViewModel {
   }
 
   private func presentDetailView(id: String) {
-    print("TODO: present detail view")
+    // for now navigate with segues.
+//    print("TODO: present detail view")
   }
 }
 
