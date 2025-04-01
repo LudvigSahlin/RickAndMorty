@@ -7,6 +7,7 @@
 
 import UIKit
 import Combine
+import SwiftUI
 
 extension CharactersViewController {
   /// Main state of ViewController.
@@ -162,7 +163,11 @@ extension CharactersViewController: UITableViewDelegate {
     let id = "\(character.id)"
     viewModel.onAction(.tappedOnCharacter(id: id))
     tableView.deselectRow(at: indexPath, animated: true)
-    navigationController?.pushViewController(CharacterDetailViewController(), animated: true)
+
+
+    let swiftUiView = CharacterDetailView(character: character)
+    let hostingController = UIHostingController(rootView: swiftUiView)
+    navigationController?.pushViewController(hostingController, animated: true)
   }
 }
 
