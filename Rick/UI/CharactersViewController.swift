@@ -42,8 +42,6 @@ extension CharactersViewController {
   }
   /// User action.
   enum Action {
-    /// Typically used if the first fetch fails.
-    case refreshData
     /// User tapped on the try again button, visible when the ``UiState/error(:Error)`` is set.
     case errorStateButtonTapped
     case scrolledToBottom
@@ -56,7 +54,7 @@ class CharactersViewController: UIViewController {
     static let characterCellIdentifier = "characterCellIdentifier"
   }
 
-  private lazy var stateView: StateView! = StateView()
+  private lazy var stateView = StateView()
 
   private lazy var charactersTableView: UITableView = {
     let tableView = UITableView()
@@ -167,7 +165,6 @@ extension CharactersViewController: UITableViewDelegate {
     viewModel.onAction(.tappedOnCharacter(id: id))
     tableView.deselectRow(at: indexPath, animated: true)
 
-
     let swiftUiView = CharacterDetailView(character: character)
     let hostingController = UIHostingController(rootView: swiftUiView)
     navigationController?.pushViewController(hostingController, animated: true)
@@ -186,32 +183,12 @@ extension CharactersViewController: UITableViewDataSource {
     }
 
     guard let cell = tableView.dequeueReusableCell(withIdentifier: Constants.characterCellIdentifier) as? CharacterCell else {
-      print("could not reuse cell")
+      print("Could not reuse cell")
       return UITableViewCell()
     }
-//    var cell = tableView.dequeueReusableCell(withIdentifier: Constants.characterCellIdentifier)
-//    if cell == nil {
-//      cell = UITableViewCell(style: .subtitle,
-//                             reuseIdentifier: Constants.characterCellIdentifier)
-//    }
     let character = characters[indexPath.row]
     cell.setContent(character)
     return cell
-  }
-}
-
-actor ImageCache {
-  static let shared = ImageCache()
-  private let cache = NSCache<NSURL, NSData>()
-
-  func load(url: URL) async throws -> Data {
-    if let localImage = cache.object(forKey: url as NSURL) {
-      print("Used cache data for image with url: \(url)")
-      return localImage as Data
-    }
-    let (data, _) = try await URLSession.shared.data(from: url as URL)
-    cache.setObject(data as NSData, forKey: url as NSURL)
-    return data
   }
 }
 

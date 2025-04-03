@@ -63,8 +63,6 @@ class CharactersViewModel {
   func onAction(_ action: CharactersViewController.Action) {
     Task {
       switch action {
-      case .refreshData:
-        await refreshData()
       case .errorStateButtonTapped:
         await refreshData()
       case .scrolledToBottom:

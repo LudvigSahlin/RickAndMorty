@@ -32,13 +32,9 @@ final class RickApi: RickApiProtocol {
             200...299 ~= response.statusCode else {
         throw RickApiError.badResponse
       }
-
       let decoder = JSONDecoder()
       decoder.keyDecodingStrategy = .convertFromSnakeCase
-
       let characterResponse = try decoder.decode(CharacterResponse.self, from: data)
-
-      print("fetched characters, count: \(characterResponse.results.count).")
       return characterResponse
 
     } catch {
