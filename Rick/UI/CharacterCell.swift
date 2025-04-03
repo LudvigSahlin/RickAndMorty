@@ -99,6 +99,7 @@ class CharacterContentView: UIView {
 
       titleLabel.topAnchor.constraint(equalTo: anImageView.topAnchor),
       titleLabel.leadingAnchor.constraint(equalTo: anImageView.trailingAnchor, constant: 16),
+      titleLabel.trailingAnchor.constraint(equalTo: self.trailingAnchor, constant: -16),
 
       subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
       subtitleLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor)
@@ -131,4 +132,18 @@ class CharacterContentView: UIView {
 
 #Preview {
   CharacterContentView(character: Character.sampleCharacter)
+}
+
+#Preview("Long names") {
+  let character = Character(id: 0,
+                            name: "Rick Sanchez Rick Sanchez",
+                            status: "Rick Sanchez Rick Sanchez Rick Sanchez Rick Sanchez",
+                            species: "",
+                            type: "",
+                            gender: "",
+                            image: URL(string: "www.example.com")!,
+                            episode: [URL(string: "www.example.com")!],
+                            url: URL(string: "www.example.com")!,
+                            created: "")
+  CharacterContentView(character: character)
 }
