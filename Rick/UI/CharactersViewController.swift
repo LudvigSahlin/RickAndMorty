@@ -62,7 +62,8 @@ class CharactersViewController: UIViewController {
     let tableView = UITableView()
     tableView.dataSource = self
     tableView.delegate = self
-    tableView.register(UITableViewCell.self,
+    tableView.rowHeight = 116
+    tableView.register(CharacterCell.self,
                        forCellReuseIdentifier: Constants.characterCellIdentifier)
     return tableView
   }()
@@ -76,6 +77,7 @@ class CharactersViewController: UIViewController {
     addSubviews()
     setConstraints()
     subscribeToPublishers()
+    title = "Characters"
   }
 
   private func addSubviews() {
@@ -181,39 +183,34 @@ extension CharactersViewController: UITableViewDataSource {
       print("Scrolled to bottom")
       viewModel.onAction(.scrolledToBottom)
     }
-    var cell = tableView.dequeueReusableCell(withIdentifier: Constants.characterCellIdentifier)
-    if cell == nil {
-      cell = UITableViewCell(style: .subtitle,
-                             reuseIdentifier: Constants.characterCellIdentifier)
+
+    guard let cell = tableView.dequeueReusableCell(withIdentifier: Constants.characterCellIdentifier) as? CharacterCell else {
+      print("could not reuse cell")
+      return UITableViewCell()
     }
-
-
+//    var cell = tableView.dequeueReusableCell(withIdentifier: Constants.characterCellIdentifier)
+//    if cell == nil {
+//      cell = UITableViewCell(style: .subtitle,
+//                             reuseIdentifier: Constants.characterCellIdentifier)
+//    }
     let character = characters[indexPath.row]
+    cell.setContent(character)
+    return cell
+  }
+}
 
+actor ImageCache {
+  static let shared = ImageCache()
+  private let cache = NSCache<NSURL, NSData>()
 
-
-
-
-    var content = cell!.defaultContentConfiguration()
-    // Configure content.
-    content.image = UIImage(systemName: "dog")
-    Task {
-      let (data, _) = try await URLSession.shared.data(from: character.image)
-      content.image = UIImage(data: data)
+  func load(url: URL) async throws -> Data {
+    if let localImage = cache.object(forKey: url as NSURL) {
+      print("Used cache data for image with url: \(url)")
+      return localImage as Data
     }
-
-
-    content.text = character.name
-    content.secondaryText = "Status: \(character.status)"
-    // Customize appearance.
-    content.imageProperties.tintColor = .purple
-
-    cell!.contentConfiguration = content
-
-
-
-
-    return cell!
+    let (data, _) = try await URLSession.shared.data(from: url as URL)
+    cache.setObject(data as NSData, forKey: url as NSURL)
+    return data
   }
 }
 
