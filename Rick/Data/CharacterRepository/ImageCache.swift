@@ -27,7 +27,7 @@ final class ImageCache: Sendable {
     guard let localImage = cache.object(forKey: key as NSURL) else {
       return nil
     }
-    print("Used cached data for image with url: \(key)")
+//    print("Used cached data for image with url: \(key)")
     return localImage as Data
   }
 }
