@@ -33,6 +33,7 @@ struct CharacterDetailView: View {
               .resizable()
               .frame(maxWidth: .infinity)
               .aspectRatio(contentMode: .fit)
+              .foregroundStyle(Color(UIColor.systemGray))
           }
           Text(character.name)
             .font(.largeTitle)
@@ -80,6 +81,7 @@ struct CharacterDetailView: View {
         }
       }
     }
+    .foregroundStyle(.black)
     .task {
       guard let (data, _) = try? await URLSession.shared.data(from: character.image),
             let uiImage = UIImage(data: data),

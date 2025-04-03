@@ -41,7 +41,7 @@ class CharacterCell: UITableViewCell {
 }
 
 class CharacterContentView: UIView {
-  private lazy var backupImage = UIImage(systemName: "arrowshape.down.circle")!
+  private lazy var backupImage = UIImage(systemName: "photo")!
 
   private lazy var anImageView: UIImageView = {
     let imageView = UIImageView()

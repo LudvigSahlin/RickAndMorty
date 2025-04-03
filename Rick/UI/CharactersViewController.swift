@@ -44,6 +44,8 @@ extension CharactersViewController {
   enum Action {
     /// Typically used if the first fetch fails.
     case refreshData
+    /// User tapped on the try again button, visible when the ``UiState/error(:Error)`` is set.
+    case errorStateButtonTapped
     case scrolledToBottom
     case tappedOnCharacter(id: String)
   }
@@ -52,11 +54,9 @@ class CharactersViewController: UIViewController {
 
   private enum Constants {
     static let characterCellIdentifier = "characterCellIdentifier"
-    static let errorImage = UIImage(systemName: "exclamationmark.triangle")!
-    static let loadingImage = UIImage(systemName: "arrowshape.down.circle")!
   }
 
-  private lazy var stateView = StateView()
+  private lazy var stateView: StateView! = StateView()
 
   private lazy var charactersTableView: UITableView = {
     let tableView = UITableView()
@@ -78,6 +78,9 @@ class CharactersViewController: UIViewController {
     setConstraints()
     subscribeToPublishers()
     title = "Characters"
+    navigationItem.largeTitleDisplayMode = .always
+    navigationController?.navigationBar.prefersLargeTitles = true
+    navigationController?.navigationBar.tintColor = .black
   }
 
   private func addSubviews() {
@@ -95,7 +98,7 @@ class CharactersViewController: UIViewController {
       charactersTableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
 
       stateView.topAnchor.constraint(equalTo: view.topAnchor),
-      stateView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+      stateView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
       stateView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
       stateView.trailingAnchor.constraint(equalTo: view.trailingAnchor)
     ])
@@ -124,14 +127,12 @@ class CharactersViewController: UIViewController {
       break
 
     case .loading:
-      stateView.imageView.image = Constants.loadingImage
-      stateView.titleLabel.text = "Fetching characters . . ."
-      stateView.subtitleLabel.text = ""
+      stateView.setState(.loading(title: "Fetching characters . . ."))
 
     case .error:
-      stateView.imageView.image = Constants.errorImage
-      stateView.titleLabel.text = "Something went wrong!"
-      stateView.subtitleLabel.text = "Please check your internet connection."
+      stateView.setState(.error(onTryAgainTapped: { [weak self] in
+        self?.viewModel.onAction(.errorStateButtonTapped)
+      }))
 
     case .finished(let characters):
       self.characters = characters

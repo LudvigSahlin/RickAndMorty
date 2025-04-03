@@ -65,6 +65,8 @@ class CharactersViewModel {
       switch action {
       case .refreshData:
         await refreshData()
+      case .errorStateButtonTapped:
+        await refreshData()
       case .scrolledToBottom:
         await fetchMoreData()
       case .tappedOnCharacter(let id):
