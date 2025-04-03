@@ -35,8 +35,18 @@ class CharacterCell: UITableViewCell {
     ])
   }
 
-  func setContent(_ character: Character) {
-    characterContentView.setContent(character)
+  /// In addition to setting texts and resetting the image, this function will also store the `id` of the character.
+  ///
+  /// See also ``setAsynconousData(_:id:)``
+  func setSyncronousData(_ character: Character) {
+    characterContentView.setSyncronousData(character)
+  }
+
+  /// If the user scrolls quickly, the cell might have been reused during the image fetch.
+  /// - Parameter image: Will be ignored if the cell has been reused.
+  /// - Parameter id: Used to check if the cell has been reused. See also ``setSyncronousData(_:)``, where a new `id` might have been set.
+  func setAsynconousData(_ image: UIImage, id: Int) {
+    characterContentView.setAsynconousData(image, id: id)
   }
 }
 
@@ -71,7 +81,7 @@ class CharacterContentView: UIView {
     addSubviews()
     setConstraints()
     if let character {
-      setContent(character)
+      setSyncronousData(character)
     }
   }
 
@@ -106,27 +116,19 @@ class CharacterContentView: UIView {
     ])
   }
 
-  func setContent(_ character: Character) {
+  func setSyncronousData(_ character: Character) {
     id = character.id
     anImageView.image = backupImage
     titleLabel.text = character.name
     subtitleLabel.text = character.status
-    Task {
-      do {
-        let imageData = try await ImageCache.shared.load(url: character.image)
-        guard self.id == character.id else {
-          print("cell was reused, return")
-          return
-        }
-        guard let uiImage = UIImage(data: imageData) else {
-          print("data could not create UIImage. Data count: \(imageData.count)")
-          return
-        }
-        self.anImageView.image = uiImage
-      } catch {
-        print("Could not load character image")
-      }
+  }
+
+  func setAsynconousData(_ image: UIImage, id: Int) {
+    guard self.id == id else {
+      print("Cell was reused, return.")
+      return
     }
+    anImageView.image = image
   }
 }
 

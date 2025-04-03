@@ -12,12 +12,8 @@ protocol CharacterServiceProtocol: Sendable {
     hasMoreData: Bool,
     data: [Character]
   )
-
   func fetchLocalImage(character: Character) async -> UIImage?
   func fetchImage(character: Character) async throws(CharacterServiceError) -> UIImage?
-
-//  func allCharactersFetched() async -> Bool
-//  func characters() async -> [Character]
 }
 
 enum CharacterServiceError: Error {
@@ -27,8 +23,6 @@ enum CharacterServiceError: Error {
 final class CharacterService: CharacterServiceProtocol {
 
   private let repository: CharacterRepositoryProtocol
-//  private(set) var allCharactersFetched = false
-//  private(set) var characters: [Character] = []
 
   init() {
     self.repository = CharacterRepository()
@@ -48,10 +42,16 @@ final class CharacterService: CharacterServiceProtocol {
   }
 
   func fetchLocalImage(character: Character) async -> UIImage? {
-    nil
+    guard let imageData = await repository.fetchLocalImage(character: character) else {
+      return nil
+    }
+    return UIImage(data: imageData)
   }
 
   func fetchImage(character: Character) async throws(CharacterServiceError) -> UIImage? {
-    nil
+    guard let imageData = try? await repository.fetchImage(character: character) else {
+      return nil
+    }
+    return UIImage(data: imageData)
   }
 }

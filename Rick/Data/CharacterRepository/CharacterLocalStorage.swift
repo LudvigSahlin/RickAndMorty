@@ -9,19 +9,22 @@ import Foundation
 
 final class CharacterLocalStorage: Sendable {
 
-  func storeCharacters(characters: [Character]) async {
+  let imageCache = ImageCache.shared
 
+  func storeCharacters(characters: [Character]) async {
+    // TODO: Store in core data.
   }
 
   func fetchCharacters() async -> [Character]? {
+    // TODO: Fetch from core data.
     nil
   }
 
-  func storeImage(_ image: Data, character: Character) {
-
+  func storeImage(_ data: Data, character: Character) async {
+    imageCache.storeImage(data, key: character.image)
   }
 
   func fetchImage(character: Character) async -> Data? {
-    nil
+    imageCache.fetchImage(key: character.image)
   }
 }

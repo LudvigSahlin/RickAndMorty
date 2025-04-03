@@ -10,14 +10,14 @@ import Foundation
 protocol CharacterRepositoryProtocol: Sendable {
   func fetchCharacters(page: Int) async throws(CharacterRepositoryError) -> CharacterResponse
   func fetchLocalImage(character: Character) async -> Data?
-  func fetchImage(character: Character) async throws(CharacterRepositoryError) -> Data?
+  func fetchImage(character: Character) async throws(CharacterRepositoryError) -> Data
 }
 
 enum CharacterRepositoryError: Error {
   case fetchError(_ error: Error)
-//  case internalError
 }
 
+/// Responsible for storing remotelly fetched data to local storage.
 final class CharacterRepository: CharacterRepositoryProtocol {
 
   private let remote: CharacterRemote
@@ -33,12 +33,16 @@ final class CharacterRepository: CharacterRepositoryProtocol {
   }
   
   func fetchLocalImage(character: Character) async -> Data? {
-    nil
+    await localStorage.fetchImage(character: character)
   }
   
-  func fetchImage(character: Character) async throws(CharacterRepositoryError) -> Data? {
-    nil
+  func fetchImage(character: Character) async throws(CharacterRepositoryError) -> Data {
+    do {
+      let imageData = try await remote.fetchImage(character: character)
+      await localStorage.storeImage(imageData, character: character)
+      return imageData
+    } catch {
+      throw .fetchError(error)
+    }
   }
-  
-
 }

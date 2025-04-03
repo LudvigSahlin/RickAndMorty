@@ -10,9 +10,10 @@ import Combine
 
 @MainActor
 protocol CharactersViewModelProtocol {
-  func onAction(_ action: CharactersViewController.Action)
   var uiStatePublisher: AnyPublisher<CharactersViewController.UiState, Never> { get }
   var listStatePublisher: AnyPublisher<CharactersViewController.ListState, Never> { get }
+  func onAction(_ action: CharactersViewController.Action)
+  func fetchImage(character: Character) async -> UIImage?
 }
 
 @MainActor
@@ -76,6 +77,13 @@ class CharactersViewModel: CharactersViewModelProtocol {
         presentDetailView(id: id)
       }
     }
+  }
+
+  func fetchImage(character: Character) async -> UIImage? {
+    if let localImage = await characterService.fetchLocalImage(character: character) {
+      return localImage
+    }
+    return try? await characterService.fetchImage(character: character)
   }
 
   /// > Side effect: Updates ``uiStatePublisher``.

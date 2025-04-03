@@ -48,6 +48,8 @@ extension CharactersViewController {
     case tappedOnCharacter(id: String)
   }
 }
+
+/// Presents a list of characters.
 class CharactersViewController: UIViewController {
 
   private enum Constants {
@@ -77,7 +79,7 @@ class CharactersViewController: UIViewController {
   private var cancellables = Set<AnyCancellable>()
   private var characters: [Character] = []
 
-  /// Typically used to mock view model states for previews.
+  /// Constructor typically used to mock view model states for previews.
   init(viewModel: CharactersViewModelProtocol) {
     self.viewModel = viewModel
     super.init(nibName: nil, bundle: nil)
@@ -210,7 +212,12 @@ extension CharactersViewController: UITableViewDataSource {
       return UITableViewCell()
     }
     let character = characters[indexPath.row]
-    cell.setContent(character)
+    cell.setSyncronousData(character)
+    Task {
+      if let image = await viewModel.fetchImage(character: character) {
+        cell.setAsynconousData(image, id: character.id)
+      }
+    }
     return cell
   }
 }
@@ -227,6 +234,7 @@ class CharactersViewModelMock: CharactersViewModelProtocol {
     listStateMockPublisher.eraseToAnyPublisher()
   }
   func onAction(_ action: CharactersViewController.Action) {}
+  func fetchImage(character: Character) async -> UIImage? { UIImage(systemName: "wand") }
 }
 
 #Preview {
