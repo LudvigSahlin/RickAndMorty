@@ -29,7 +29,7 @@ struct CharacterDetailView: View {
               .aspectRatio(contentMode: .fit)
 
           } placeholder: {
-            Image(systemName: "arrowshape.down.circle")
+            Image(systemName: "photo")
               .resizable()
               .frame(maxWidth: .infinity)
               .aspectRatio(contentMode: .fit)
