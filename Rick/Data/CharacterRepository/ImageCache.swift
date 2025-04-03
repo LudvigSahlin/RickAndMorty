@@ -13,7 +13,7 @@ actor ImageCache {
 
   func load(url: URL) async throws -> Data {
     if let localImage = cache.object(forKey: url as NSURL) {
-      print("Used cached data for image with url: \(url)")
+//      print("Used cached data for image with url: \(url)")
       return localImage as Data
     }
     let (data, _) = try await URLSession.shared.data(from: url as URL)

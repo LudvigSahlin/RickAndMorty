@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Character: Decodable {
+struct Character: Decodable, Hashable {
   /// The id of the character.
   let id: Int
   /// The name of the character.
@@ -34,4 +34,14 @@ struct Character: Decodable {
   let url: URL
   /// Time at which the character was created in the database.
   let created: String
+}
+
+extension Character {
+  static let sampleCharacter: Character = {
+    let decoder = JSONDecoder()
+    decoder.keyDecodingStrategy = .convertFromSnakeCase
+    let characterData = try! Data(contentsOf: Bundle.main.url(forResource: "samplecharacter", withExtension: "json")!)
+    let character = try! decoder.decode(Character.self, from: characterData)
+    return character
+  }()
 }

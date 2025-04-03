@@ -9,28 +9,31 @@ import UIKit
 import Combine
 
 @MainActor
-class CharactersViewModel {
+protocol CharactersViewModelProtocol {
+  func onAction(_ action: CharactersViewController.Action)
+  var uiStatePublisher: AnyPublisher<CharactersViewController.UiState, Never> { get }
+  var listStatePublisher: AnyPublisher<CharactersViewController.ListState, Never> { get }
+}
+
+@MainActor
+class CharactersViewModel: CharactersViewModelProtocol {
 
   private let characterService: CharacterServiceProtocol
   private var currentPage: Int = 0
   private var hasLoadedAllCharacters = false
 
-  private lazy var sampleCharacter = {
-    let decoder = JSONDecoder()
-    decoder.keyDecodingStrategy = .convertFromSnakeCase
-    let characterData = try! Data(contentsOf: Bundle.main.url(forResource: "samplecharacter", withExtension: "json")!)
-    let character = try! decoder.decode(Character.self, from: characterData)
-    return character
-  }()
-
   private let uiStatePrivatePublisher = CurrentValueSubject<CharactersViewController.UiState, Never>(.idle)
   var uiStatePublisher: AnyPublisher<CharactersViewController.UiState, Never> {
-    uiStatePrivatePublisher.eraseToAnyPublisher()
+    uiStatePrivatePublisher
+      .removeDuplicates()
+      .eraseToAnyPublisher()
   }
 
   private let listStatePrivatePublisher = CurrentValueSubject<CharactersViewController.ListState, Never>(.idle)
   var listStatePublisher: AnyPublisher<CharactersViewController.ListState, Never> {
-    listStatePrivatePublisher.eraseToAnyPublisher()
+    listStatePrivatePublisher
+      .removeDuplicates()
+      .eraseToAnyPublisher()
   }
 
   private(set) var characters: [Character] = []
@@ -65,8 +68,10 @@ class CharactersViewModel {
       switch action {
       case .errorStateButtonTapped:
         await refreshData()
+
       case .scrolledToBottom:
         await fetchMoreData()
+
       case .tappedOnCharacter(let id):
         presentDetailView(id: id)
       }
@@ -75,12 +80,12 @@ class CharactersViewModel {
 
   /// > Side effect: Updates ``uiStatePublisher``.
   private func refreshData() async {
-    uiStatePrivatePublisher.value = .loading(preview: sampleCharacter)
+    uiStatePrivatePublisher.value = .loading(preview: Character.sampleCharacter)
     do {
       try await fetchNextPage(fetchFromBeginning: true)
       uiStatePrivatePublisher.value = .finished(characters: self.characters)
     } catch {
-      uiStatePrivatePublisher.value = .error(error: error)
+      uiStatePrivatePublisher.value = .error
     }
   }
 
@@ -91,7 +96,7 @@ class CharactersViewModel {
       try await fetchNextPage()
       listStatePrivatePublisher.value = .finished(characters: self.characters)
     } catch {
-      listStatePrivatePublisher.value = .error(error: error)
+      listStatePrivatePublisher.value = .error
     }
   }
 

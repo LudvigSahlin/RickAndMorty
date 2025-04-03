@@ -135,12 +135,5 @@ extension UIImage {
 
 
 #Preview {
-  lazy var sampleCharacter = {
-    let decoder = JSONDecoder()
-    decoder.keyDecodingStrategy = .convertFromSnakeCase
-    let characterData = try! Data(contentsOf: Bundle.main.url(forResource: "samplecharacter", withExtension: "json")!)
-    let character = try! decoder.decode(Character.self, from: characterData)
-    return character
-  }()
-  CharacterDetailView(character: sampleCharacter)
+  CharacterDetailView(character: Character.sampleCharacter)
 }

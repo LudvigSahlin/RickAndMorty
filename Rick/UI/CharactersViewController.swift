@@ -11,12 +11,12 @@ import SwiftUI
 
 extension CharactersViewController {
   /// Main state of ViewController.
-  enum UiState {
+  enum UiState: Equatable {
     case idle
     /// Initial data is being fetched.
     case loading(preview: Character)
     /// Initial data failed to fetch.
-    case error(error: Error)
+    case error
     /// Initial data is fetched.
     case finished(characters: [Character])
 
@@ -30,13 +30,13 @@ extension CharactersViewController {
     }
   }
   /// Typically used to show activity indicator in list.
-  enum ListState {
+  enum ListState: Equatable {
     /// There might be more data to fetch.
     case idle
     /// More data is currently being fetched.
     case loading
     /// Last attempt to fetch more data resulted in an error.
-    case error(error: Error)
+    case error
     /// There is no more data available.
     case finished(characters: [Character])
   }
@@ -66,9 +66,27 @@ class CharactersViewController: UIViewController {
     return tableView
   }()
 
-  private let viewModel = CharactersViewModel()
+  private lazy var listLoadingIndicator: UIActivityIndicatorView = {
+    let indicator = UIActivityIndicatorView(style: .large)
+    indicator.frame = CGRect(origin: .zero, size: CGSize(width: 100, height: 100))
+    indicator.startAnimating()
+    return indicator
+  }()
+
+  private let viewModel: CharactersViewModelProtocol
   private var cancellables = Set<AnyCancellable>()
   private var characters: [Character] = []
+
+  /// Typically used to mock view model states for previews.
+  init(viewModel: CharactersViewModelProtocol) {
+    self.viewModel = viewModel
+    super.init(nibName: nil, bundle: nil)
+  }
+  
+  required init?(coder: NSCoder) {
+    self.viewModel = CharactersViewModel()
+    super.init(coder: coder)
+  }
 
   override func viewDidLoad() {
     super.viewDidLoad()
@@ -84,6 +102,7 @@ class CharactersViewController: UIViewController {
   private func addSubviews() {
     view.addSubview(charactersTableView)
     view.addSubview(stateView)
+    charactersTableView.tableFooterView = listLoadingIndicator
   }
 
   private func setConstraints() {
@@ -143,16 +162,20 @@ class CharactersViewController: UIViewController {
     case .idle:
       break
     case .loading:
-      // show loading spinner?
-      break
+      listLoadingIndicator.startAnimating()
+
     case .error:
-      // remove loading spinner?
-      break
+      listLoadingIndicator.stopAnimating()
+
     case .finished(let characters):
-      self.characters = characters
-      charactersTableView.reloadData() // TODO: append the new data only
-      // remove loading spinner?
-      break
+      if self.characters != characters {
+        print("Received more characters, old count: \(self.characters.count), new: \(characters.count).")
+        self.characters = characters
+        charactersTableView.reloadData() // TODO: append the new data only
+      } else {
+        print("Received same characters, do not reload table.")
+      }
+      listLoadingIndicator.stopAnimating()
     }
   }
 }
@@ -192,6 +215,37 @@ extension CharactersViewController: UITableViewDataSource {
   }
 }
 
-#Preview {
-  CharactersViewController()
+#if DEBUG
+
+class CharactersViewModelMock: CharactersViewModelProtocol {
+  var uiStateMockPublisher: CurrentValueSubject<CharactersViewController.UiState, Never> = .init(.idle)
+  var uiStatePublisher: AnyPublisher<CharactersViewController.UiState, Never> {
+    uiStateMockPublisher.eraseToAnyPublisher()
+  }
+  var listStateMockPublisher: CurrentValueSubject<CharactersViewController.ListState, Never> = .init(.idle)
+  var listStatePublisher: AnyPublisher<CharactersViewController.ListState, Never> {
+    listStateMockPublisher.eraseToAnyPublisher()
+  }
+  func onAction(_ action: CharactersViewController.Action) {}
 }
+
+#Preview {
+  let viewModel = CharactersViewModel()
+  CharactersViewController(viewModel: viewModel)
+}
+
+#Preview("List loading") {
+  let viewModel = CharactersViewModelMock()
+  viewModel.uiStateMockPublisher.value = .finished(characters: [Character.sampleCharacter])
+  viewModel.listStateMockPublisher.value = .loading
+  return CharactersViewController(viewModel: viewModel)
+}
+
+#Preview("List error") {
+  let viewModel = CharactersViewModelMock()
+  viewModel.uiStateMockPublisher.value = .finished(characters: [Character.sampleCharacter])
+  viewModel.listStateMockPublisher.value = .error
+  return CharactersViewController(viewModel: viewModel)
+}
+
+#endif
